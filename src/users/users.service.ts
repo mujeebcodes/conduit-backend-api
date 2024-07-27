@@ -9,6 +9,7 @@ import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateUserDto } from './dto/CreateUserDto';
 import * as bcrypt from 'bcrypt';
+import { LoginUserDto } from './dto/LoginUserDto';
 
 @Injectable()
 export class UsersService {
@@ -43,6 +44,31 @@ export class UsersService {
     });
 
     return this.buildUserResponse(newUser);
+  }
+
+  async login(data: LoginUserDto) {
+    const errorResponse = { errors: {} };
+
+    const existingUser = await this.prismaService.user.findUnique({
+      where: { email: data.email },
+    });
+
+    if (!existingUser) {
+      errorResponse.errors['credentials'] = 'are invalid';
+      throw new HttpException(errorResponse, HttpStatus.UNAUTHORIZED);
+    }
+
+    const correctPassword = await bcrypt.compare(
+      data.password,
+      existingUser.password,
+    );
+
+    if (!correctPassword) {
+      errorResponse.errors['credentials'] = 'are invalid';
+      throw new HttpException(errorResponse, HttpStatus.UNAUTHORIZED);
+    }
+    delete existingUser.password;
+    return this.buildUserResponse(existingUser);
   }
 
   generateJWTToken(payload: string) {
