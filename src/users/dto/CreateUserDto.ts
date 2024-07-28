@@ -1,5 +1,6 @@
 import {
   IsEmail,
+  IsLowercase,
   IsNotEmpty,
   IsOptional,
   IsStrongPassword,
@@ -12,6 +13,7 @@ export class CreateUserDto {
   email: string;
 
   @IsNotEmpty()
+  @IsLowercase()
   @MinLength(3, { message: 'Username must be at least 3 characters' })
   username: string;
 

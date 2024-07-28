@@ -11,9 +11,10 @@ import { ConfigModule } from '@nestjs/config';
 import { AuthMiddleware } from './users/middleware/AuthMiddleware';
 import { JwtModule } from '@nestjs/jwt';
 import { PrismaModule } from './prisma/prisma.module';
+import { ProfilesModule } from './profiles/profiles.module';
 
 @Module({
-  imports: [ConfigModule.forRoot(), UsersModule, JwtModule, PrismaModule],
+  imports: [ConfigModule.forRoot(), UsersModule, JwtModule, PrismaModule, ProfilesModule],
   controllers: [AppController],
   providers: [AppService],
 })
