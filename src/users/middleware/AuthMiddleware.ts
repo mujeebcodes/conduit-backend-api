@@ -1,8 +1,7 @@
 import { Injectable, NestMiddleware } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
 import { User } from '@prisma/client';
 import { NextFunction, Request } from 'express';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { UsersService } from '../users.service';
 
 export interface ExtendedRequest extends Request {
   user?: User;
@@ -10,10 +9,7 @@ export interface ExtendedRequest extends Request {
 
 @Injectable()
 export class AuthMiddleware implements NestMiddleware {
-  constructor(
-    private readonly jwtService: JwtService,
-    private readonly prismaService: PrismaService,
-  ) {}
+  constructor(private readonly usersService: UsersService) {}
 
   async use(req: ExtendedRequest, _: any, next: NextFunction) {
     if (!req.headers.authorization) {
@@ -21,12 +17,12 @@ export class AuthMiddleware implements NestMiddleware {
       return next();
     }
 
-    const token = req.headers.authorization.split(' ')[1];
+    const token = req.headers.authorization;
+
     try {
-      const { email } = await this.jwtService.verify(token);
-      const existingUser = await this.prismaService.user.findUnique({
-        where: { email },
-      });
+      const decoded = await this.usersService.verifyToken(token);
+
+      const existingUser = await this.usersService.getUserById(decoded.id);
 
       if (!existingUser) {
         throw new Error();
@@ -35,6 +31,7 @@ export class AuthMiddleware implements NestMiddleware {
       req.user = existingUser;
       next();
     } catch (error) {
+      console.log(error);
       req.user = null;
       next();
     }
